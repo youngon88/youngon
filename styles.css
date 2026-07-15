@@ -776,3 +776,165 @@ footer {
   color: #ef4444;
 }
 
+/* ===================== Mobile Responsive ===================== */
+@media (max-width: 900px) {
+  .container {
+    padding: 0 20px;
+  }
+
+  .section-padding {
+    padding: 90px 0;
+  }
+
+  /* Nav: hide the text links on tablet/mobile, keep logo + CTA button */
+  .nav-menu {
+    gap: 12px;
+  }
+
+  .nav-menu .nav-link {
+    display: none;
+  }
+
+  .nav-container {
+    height: 68px;
+  }
+
+  /* Hero */
+  .hero {
+    padding-top: 140px;
+    padding-bottom: 80px;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+    letter-spacing: -1px;
+  }
+
+  .hero p {
+    font-size: 17px;
+    margin-bottom: 40px;
+  }
+
+  .hero-badge {
+    font-size: 12.5px;
+    padding: 8px 16px;
+  }
+
+  /* Section headers */
+  .section-header {
+    margin-bottom: 48px;
+  }
+
+  .section-header h2 {
+    font-size: 30px;
+  }
+
+  .section-header p {
+    font-size: 16px;
+  }
+
+  /* Grids collapse to single column */
+  .grid-3 {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .card {
+    padding: 36px 26px;
+    border-radius: 22px;
+  }
+
+  /* Pricing */
+  .pricing-price {
+    font-size: 36px;
+  }
+
+  /* Form */
+  .form-wrapper {
+    padding: 32px 22px;
+    border-radius: 24px;
+  }
+
+  .form-control {
+    padding: 14px 16px;
+  }
+
+  .btn {
+    padding: 15px 28px;
+    font-size: 15px;
+  }
+
+  /* Generated result: images + text stack vertically instead of side-by-side */
+  .result-card {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .result-wrapper {
+    padding: 24px !important;
+    border-radius: 22px !important;
+  }
+
+  .result-text-box h3 {
+    font-size: 20px !important;
+  }
+
+  /* Footer stacks vertically */
+  .footer-content {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .footer-links {
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Toast notification: keep it from overflowing on small screens */
+  .toast-notification {
+    left: 20px;
+    right: 20px;
+    bottom: 24px;
+  }
+
+  /* Payment / result modal boxes */
+  .modal-overlay .modal-box {
+    width: 100% !important;
+    margin: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 30px;
+  }
+
+  .hero p {
+    font-size: 15.5px;
+  }
+
+  .section-header h2 {
+    font-size: 24px;
+  }
+
+  .logo span,
+  .logo {
+    font-size: 17px;
+  }
+
+  .pricing-price {
+    font-size: 30px;
+  }
+
+  .form-wrapper {
+    padding: 24px 16px;
+  }
+
+  .btn {
+    padding: 14px 20px;
+    font-size: 14.5px;
+  }
+}
+
