@@ -67,9 +67,10 @@ function callGeminiREST(modelName, apiKey, payload) {
 // ---------- OpenAI REST call (text generation only; images stay on Gemini) ----------
 function callOpenAIREST(apiKey, prompt) {
   const payload = {
-    model: 'gpt-5.6',
+    model: 'gpt-5.5',
     messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' }
+    response_format: { type: 'json_object' },
+    reasoning_effort: 'minimal'
   };
 
   console.log('[OpenAI] Sending request to api.openai.com/v1/chat/completions ...');
@@ -106,8 +107,8 @@ function callOpenAIREST(apiKey, prompt) {
     });
 
     req.on('timeout', () => {
-      console.error('[OpenAI] Request timed out after 15s with no response.');
-      req.destroy(new Error('OpenAI request timed out after 15s'));
+      console.error('[OpenAI] Request timed out after 20s with no response.');
+      req.destroy(new Error('OpenAI request timed out after 20s'));
     });
 
     req.on('error', (e) => reject(e));
