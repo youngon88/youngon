@@ -72,6 +72,8 @@ function callOpenAIREST(apiKey, prompt) {
     response_format: { type: 'json_object' }
   };
 
+  console.log('[OpenAI] Sending request to api.openai.com/v1/chat/completions ...');
+
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'api.openai.com',
@@ -80,10 +82,12 @@ function callOpenAIREST(apiKey, prompt) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
-      }
+      },
+      timeout: 15000 // fail fast instead of hanging until Netlify's own hard cutoff
     };
 
     const req = https.request(options, (res) => {
+      console.log(`[OpenAI] Response received, status ${res.statusCode}`);
       const chunks = [];
       res.on('data', (chunk) => chunks.push(chunk));
       res.on('end', () => {
@@ -98,6 +102,11 @@ function callOpenAIREST(apiKey, prompt) {
           reject(new Error(`API responded with status code ${res.statusCode}: ${data}`));
         }
       });
+    });
+
+    req.on('timeout', () => {
+      console.error('[OpenAI] Request timed out after 15s with no response.');
+      req.destroy(new Error('OpenAI request timed out after 15s'));
     });
 
     req.on('error', (e) => reject(e));
