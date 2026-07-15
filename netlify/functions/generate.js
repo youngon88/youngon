@@ -64,6 +64,67 @@ function callGeminiREST(modelName, apiKey, payload) {
   });
 }
 
+// ---------- OpenAI REST call (text generation only; images stay on Gemini) ----------
+function callOpenAIREST(apiKey, prompt) {
+  const payload = {
+    model: 'gpt-5.6',
+    messages: [{ role: 'user', content: prompt }],
+    response_format: { type: 'json_object' }
+  };
+
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.openai.com',
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        const data = Buffer.concat(chunks).toString('utf-8');
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(new Error('JSON parsing failed from OpenAI endpoint: ' + e.message));
+          }
+        } else {
+          reject(new Error(`API responded with status code ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => reject(e));
+    req.write(JSON.stringify(payload));
+    req.end();
+  });
+}
+
+async function callOpenAIWithRetry(apiKey, prompt, maxRetries = 2) {
+  const retryIntervals = [1000, 1500];
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await callOpenAIREST(apiKey, prompt);
+    } catch (err) {
+      const isOverloaded = err.message.includes('503') || err.message.includes('overloaded') || err.message.includes('429');
+      if (isOverloaded && attempt < maxRetries) {
+        const nextDelay = retryIntervals[attempt] || 1500;
+        console.warn(`[Retry] OpenAI overloaded. attempt ${attempt + 1}/${maxRetries}, waiting ${nextDelay}ms`);
+        await wait(nextDelay);
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // ---------- Retry wrapper ----------
@@ -313,15 +374,20 @@ exports.handler = async (event) => {
     };
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey.trim() === '') {
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (!openaiKey || openaiKey.trim() === '') {
     // NOTE: no mock fallback anymore, per decision. If the key is missing this
     // just fails loudly instead of silently showing placeholder content.
-    throw new Error('GEMINI_API_KEY is not configured.');
+    throw new Error('OPENAI_API_KEY is not configured.');
+  }
+  if (contentType === 'blog' && (!geminiKey || geminiKey.trim() === '')) {
+    throw new Error('GEMINI_API_KEY is not configured (needed for blog images).');
   }
 
-  // NOTE: Mock-content fallback has been intentionally removed. If Gemini is
-  // overloaded (503) or returns something we can't parse, this throws and the
+  // NOTE: Mock-content fallback has been intentionally removed. If the AI call
+  // is overloaded or returns something we can't parse, this throws and the
   // whole function invocation fails, which Netlify surfaces to the frontend as
   // a hard connection failure ("서버와 통신이 실패했습니다") rather than quietly
   // substituting example content.
@@ -329,15 +395,14 @@ exports.handler = async (event) => {
     ? buildBlogPrompt(userJob, contentGoal, contentLink, contentRequest)
     : buildThreadPrompt(userJob, contentGoal, contentLink, contentRequest);
 
-  const textPayload = { contents: [{ parts: [{ text: prompt }] }] };
-  const textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 2);
-
-  const responseText = textResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  // Text generation now goes through GPT instead of Gemini.
+  const openaiResult = await callOpenAIWithRetry(openaiKey, prompt, 2);
+  const responseText = openaiResult.choices?.[0]?.message?.content || '';
   let cleanJsonText = responseText.trim();
   if (cleanJsonText.startsWith('```')) {
     cleanJsonText = cleanJsonText.replace(/^```json/, '').replace(/```$/, '').trim();
   }
-  const parsed = JSON.parse(cleanJsonText); // throws if Gemini didn't return valid JSON
+  const parsed = JSON.parse(cleanJsonText); // throws if GPT didn't return valid JSON
 
   let images = [];
   if (contentType === 'blog') {
@@ -347,7 +412,7 @@ exports.handler = async (event) => {
         contents: [{ parts: [{ text: promptText }] }],
         generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
       };
-      const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 1);
+      const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', geminiKey, imagePayload, 1);
       const part = imgResult.candidates?.[0]?.content?.parts?.[0];
       if (part && part.inlineData) {
         images.push({ url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText });
