@@ -116,11 +116,17 @@ function getMockContent(type, job, goal, strategy, isFinalFallback = false) {
 }
 
 // ---------- Limit tracking via Netlify Blobs (persistent, replaces Vercel KV) ----------
-const store = getStore('user-limits');
+// NOTE: getStore() must be called INSIDE the handler at invoke time, not at module
+// load time, otherwise Netlify hasn't injected the Blobs context yet and it throws
+// MissingBlobsEnvironmentError.
+function getLimitsStore() {
+  return getStore('user-limits');
+}
 
 async function handleLimitCheck(email) {
   const defaultVal = { blog_count: 0, thread_count: 0 };
   try {
+    const store = getLimitsStore();
     const data = await store.get(`user:${email}`, { type: 'json' });
     if (!data) return defaultVal;
     return {
@@ -138,6 +144,7 @@ async function handleLimitIncrement(email, contentType, currentCounts) {
   const nextVal = (currentCounts[column] || 0) + 1;
   const updated = { ...currentCounts, [column]: nextVal };
   try {
+    const store = getLimitsStore();
     await store.setJSON(`user:${email}`, updated);
   } catch (e) {
     console.error('Netlify Blobs increment error:', e.message);
