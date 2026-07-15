@@ -83,7 +83,8 @@ function callOpenAIREST(apiKey, prompt) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      timeout: 15000 // fail fast instead of hanging until Netlify's own hard cutoff
+      family: 4, // force IPv4 - some serverless environments hang indefinitely on IPv6 routes
+      timeout: 20000
     };
 
     const req = https.request(options, (res) => {
