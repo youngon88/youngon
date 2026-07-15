@@ -343,19 +343,27 @@ exports.handler = async (event) => {
   let images = [];
   if (contentType === 'blog') {
     const prompts = [parsed.image_prompt_1, parsed.image_prompt_2, parsed.image_prompt_3, parsed.image_prompt_4].filter(Boolean);
-    for (const promptText of prompts) {
+    // Generate all images concurrently instead of one-by-one - sequential calls
+    // were pushing total execution past Netlify's ~30s function time limit.
+    const imageResults = await Promise.allSettled(prompts.map((promptText) => {
       const imagePayload = {
         contents: [{ parts: [{ text: promptText }] }],
         generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
       };
-      const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', geminiKey, imagePayload, 1);
-      const part = imgResult.candidates?.[0]?.content?.parts?.[0];
-      if (part && part.inlineData) {
-        images.push({ url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText });
-      } else {
-        throw new Error('No inlineData returned from Gemini image REST API.');
+      return callRESTWithRetry('gemini-3.1-flash-image', geminiKey, imagePayload, 1);
+    }));
+
+    images = imageResults.map((result, i) => {
+      const promptText = prompts[i];
+      if (result.status === 'fulfilled') {
+        const part = result.value.candidates?.[0]?.content?.parts?.[0];
+        if (part && part.inlineData) {
+          return { url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText };
+        }
       }
-    }
+      console.error(`[Image ${i + 1}] generation failed:`, result.reason?.message || 'no inlineData returned');
+      return { url: 'error', error: '이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.', prompt: promptText };
+    });
   }
 
   const bodyContent = parsed.body || parsed.content || '';
