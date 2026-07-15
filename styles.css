@@ -58,6 +58,9 @@ body {
 }
 
 /* Ambient Background Lights */
+.mobile-break {
+  display: none;
+}
 body::before {
   content: '';
   position: absolute;
@@ -803,6 +806,10 @@ footer {
   h1, h2, h3, p {
     word-break: keep-all;
     overflow-wrap: break-word;
+  }
+
+  .mobile-break {
+    display: block;
   }
 
   .section-padding {
