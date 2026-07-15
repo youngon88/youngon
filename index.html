@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 콘텐츠 자동화 - 1인 창업자를 위한 콘텐츠 자동화 솔루션</title>
+  <meta name="description" content="무엇을 올릴지부터 작성까지 한 번에 해결하세요. AI 콘텐츠 자동화 서비스는 1인 창업자들을 위한 블로그 및 스레드 글/이미지 자동 생성 도구입니다.">
+  
+  <!-- Favicon (Inline SVG for instant loading and crisp resolution) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L2 22H22L12 2Z' fill='%238B5CF6'/%3E%3C/svg%3E">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://localhost:8080/">
+  <meta property="og:title" content="AI 콘텐츠 자동화 - 1인 창업자를 위한 콘텐츠 자동화 솔루션">
+  <meta property="og:description" content="무엇을 올릴지부터 작성까지 한 번에 해결하세요. 블로그와 스레드 글/이미지 자동 발행 서비스.">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&h=630&fit=crop">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="http://localhost:8080/">
+  <meta property="twitter:title" content="AI 콘텐츠 자동화 - 1인 창업자를 위한 콘텐츠 자동화 솔루션">
+  <meta property="twitter:description" content="무엇을 올릴지부터 작성까지 한 번에 해결하세요. 블로그와 스레드 글/이미지 자동 발행 서비스.">
+  <meta property="twitter:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&h=630&fit=crop">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Background decorative spots -->
+  <div class="glow-spot-3"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-container">
+      <a href="#" class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 22H22L12 2Z" fill="url(#logoGrad)"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8B5CF6"/>
+              <stop offset="1" stop-color="#6D28D9"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>AI 콘텐츠 자동화</span>
+      </a>
+      <nav class="nav-menu">
+        <a href="#problems" class="nav-link">해결 과제</a>
+        <a href="#process" class="nav-link">작동 방식</a>
+        <a href="#pricing" class="nav-link">요금제</a>
+        <a href="#apply" class="btn btn-secondary" style="padding: 10px 22px; font-size: 14px;">지금 시작하기</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="container hero">
+    <div class="hero-badge">1인 창업자 전용 AI 콘텐츠 마케터</div>
+    <h1 class="gradient-text">무엇을 올릴지부터 작성까지,<br>한 번에 해결하세요</h1>
+    <p>매일 반복되는 콘텐츠 기획과 제작 고민은 이제 끝내세요.<br>AI가 타겟 분석부터 채널별 전략 수립, 본문 작성,<br>그리고 커스텀 비주얼 이미지까지 1분 만에 완성합니다.</p>
+    <div class="hero-cta-wrapper">
+      <a href="#apply" class="btn btn-primary">블로그2편+스레드5개 무료체험</a>
+      <span class="hero-subtext">카드 등록 불필요 • 즉시 체험 가능</span>
+    </div>
+  </section>
+
+  <!-- Problem Section (Pain points) -->
+  <section id="problems" class="container section-padding fade-in-section">
+    <div class="section-header">
+      <h2>혼자서 다 해야 하는 마케팅,<br>이런 문제로 막막하지 않으셨나요?</h2>
+      <p>1인 기업의 가장 큰 자산은 시간입니다. 콘텐츠 제작에 더 이상 하루 절반을 낭비하지 마세요.</p>
+    </div>
+    <div class="grid-3">
+      <!-- Card 1 -->
+      <div class="card problem-card">
+        <div class="icon-box">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h3>아이디어 고갈</h3>
+        <p>오늘 블로그에 무엇을 올릴지, 내일 스레드에는 어떤 흥미로운 이야기를 담아야 할지 막막하여 빈 화면만 바라보고 계시진 않나요?</p>
+      </div>
+      <!-- Card 2 -->
+      <div class="card problem-card">
+        <div class="icon-box">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h3>시간과 리소스 부족</h3>
+        <p>기획안 짜고, 글 작성하고, 맞춤법 검사까지 마치고 나면 정작 본업인 비즈니스 운영과 고객 응대에 쓸 시간이 턱없이 부족합니다.</p>
+      </div>
+      <!-- Card 3 -->
+      <div class="card problem-card">
+        <div class="icon-box">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
+        <h3>이미지 제작의 한계</h3>
+        <p>글만 있으면 밋밋해 보이고, 저작권 걱정 없는 고품질 스톡 이미지나 매력적인 카드뉴스를 직접 디자인하기에는 실력도 도구도 부족합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process Section (How it works) -->
+  <section id="process" class="process section-padding fade-in-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>단 3단계로 끝나는 콘텐츠 발행</h2>
+        <p>여러분의 비즈니스를 입력하는 것 외에 더 이상 손댈 필요가 없습니다.</p>
+      </div>
+      <div class="grid-3">
+        <!-- Step 1 -->
+        <div class="card process-card">
+          <span class="step-num">Step 01</span>
+          <h3>하는 일 입력</h3>
+          <p>어떤 비즈니스를 운영 중인지, 이번 주에 홍보하고 싶은 핵심 주제나 상품을 텍스트로 간단히 적어 제출합니다.</p>
+        </div>
+        <!-- Step 2 -->
+        <div class="card process-card">
+          <span class="step-num">Step 02</span>
+          <h3>AI 생성</h3>
+          <p>입력값을 기반으로 고도화된 AI 엔진이 자동으로 최적의 마케팅 전략을 도출하고 본문 글과 고화질 커스텀 이미지를 생성합니다.</p>
+        </div>
+        <!-- Step 3 -->
+        <div class="card process-card">
+          <span class="step-num">Step 03</span>
+          <h3>원클릭 바로 발행</h3>
+          <p>생성된 최종 콘텐츠를 눈으로 검토한 뒤, 연동된 블로그 및 스레드 채널로 클릭 한 번에 바로 내보내고 일정을 예약합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="container section-padding fade-in-section">
+    <div class="section-header">
+      <h2>합리적인 맞춤형 요금제</h2>
+      <p>필요한 채널만 쏙 골라 가장 효과적인 마케팅을 시작하세요.</p>
+    </div>
+    <div class="grid-3">
+      <!-- Card 1: Blog -->
+      <div class="card pricing-card">
+        <div class="pricing-header">
+          <div class="pricing-name">블로그</div>
+          <div class="pricing-price">₩40,000 <span>/ 월</span></div>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            월 10편 고품질 블로그 글 생성
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            글마다 맞춤형 이미지 최대 4장(대표 이미지 + 본문 삽입 이미지)
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            검색 상위 노출(SEO) 키워드 추천
+          </li>
+        </ul>
+        <a href="#apply" class="btn btn-secondary select-pricing" data-plan="블로그 요금제">선택하기</a>
+        <span class="trial-notice">7일 무료체험 후 결제</span>
+      </div>
+
+      <!-- Card 2: Package (Popular) -->
+      <div class="card pricing-card popular">
+        <div class="popular-badge">가장 인기</div>
+        <div class="pricing-header">
+          <div class="pricing-name">블로그 + 스레드 패키지</div>
+          <div class="pricing-price">₩50,000 <span>/ 월</span></div>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span class="purple-highlight">개별 구매 대비 10,000원 할인</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            월 10편 블로그 글 + 이미지 최대 4장
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            월 20개 스레드 포스트 발행
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            블로그+스레드 콘텐츠를 한 곳에서 관리
+          </li>
+        </ul>
+        <a href="#apply" class="btn btn-primary select-pricing" data-plan="블로그+스레드 패키지 요금제">무료로 시작하기</a>
+        <span class="trial-notice">블로그2편+스레드5개 무료체험</span>
+      </div>
+
+      <!-- Card 3: Threads -->
+      <div class="card pricing-card">
+        <div class="pricing-header">
+          <div class="pricing-name">스레드</div>
+          <div class="pricing-price">₩20,000 <span>/ 월</span></div>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            월 20개 트렌디한 스레드 게시물
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            반응률 높은 훅(Hook) 문장 구성
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            스레드 맞춤 트렌디 톤앤매너
+          </li>
+        </ul>
+        <a href="#apply" class="btn btn-secondary select-pricing" data-plan="스레드 요금제">선택하기</a>
+        <span class="trial-notice">7일 무료체험 후 결제</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lead Capture Form Section -->
+  <section id="apply" class="container section-padding contact-section fade-in-section">
+    <div class="section-header">
+      <h2>지금 AI 콘텐츠를 생성해보세요</h2>
+      <p>아래 비즈니스 정보와 마케팅 목표를 적으면 AI가 즉시 맞춤형 글과 이미지를 제작합니다.</p>
+    </div>
+    <div class="form-wrapper">
+      <form id="applyForm">
+        <div class="form-group">
+          <label class="form-label" for="userName">이름<span class="required-asterisk">*</span></label>
+          <input type="text" id="userName" class="form-control" placeholder="홍길동" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="userEmail">이메일 주소<span class="required-asterisk">*</span></label>
+          <input type="email" id="userEmail" class="form-control" placeholder="example@domain.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="userJob">무슨 일을 하고 계신가요?<span class="required-asterisk">*</span></label>
+          <input type="text" id="userJob" class="form-control" placeholder="예: 1인 쇼핑몰 운영, IT 컨설팅, 1인 번역가 등" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">원하는 콘텐츠 생성 유형<span class="required-asterisk">*</span></label>
+          <div class="radio-group" style="display: flex; gap: 24px; margin-top: 8px;">
+            <label class="radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-gray-300); font-weight: 500;">
+              <input type="radio" name="contentType" value="blog" checked style="accent-color: var(--accent-purple); width: 18px; height: 18px;">
+              <span>블로그 글 생성 (한도 2회)</span>
+            </label>
+            <label class="radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-gray-300); font-weight: 500;">
+              <input type="radio" name="contentType" value="thread" style="accent-color: var(--accent-purple); width: 18px; height: 18px;">
+              <span>스레드 글 생성 (한도 5회)</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">이번 콘텐츠 발행 목표<span class="required-asterisk">*</span></label>
+          <div class="radio-group" style="display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;">
+            <label class="radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-gray-300); font-weight: 500;">
+              <input type="radio" name="contentGoal" value="브랜딩" checked style="accent-color: var(--accent-purple); width: 18px; height: 18px;">
+              <span>브랜딩</span>
+            </label>
+            <label class="radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-gray-300); font-weight: 500;">
+              <input type="radio" name="contentGoal" value="검색 유입" style="accent-color: var(--accent-purple); width: 18px; height: 18px;">
+              <span>검색 유입</span>
+            </label>
+            <label class="radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-gray-300); font-weight: 500;">
+              <input type="radio" name="contentGoal" value="문의" style="accent-color: var(--accent-purple); width: 18px; height: 18px;">
+              <span>문의</span>
+            </label>
+            <label class="radio-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-gray-300); font-weight: 500;">
+              <input type="radio" name="contentGoal" value="판매" style="accent-color: var(--accent-purple); width: 18px; height: 18px;">
+              <span>판매</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contentLink">홈페이지,네이버플레이스 링크 (선택)</label>
+          <input type="url" id="contentLink" class="form-control" placeholder="https://example.com (관련 제품 페이지 등)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contentRequest">추가 요청 (선택)</label>
+          <textarea id="contentRequest" class="form-control" rows="3" placeholder="예: 신뢰감을 주는 논리적인 말투로 써줘, 이모지를 듬뿍 섞어줘 등" style="resize: vertical;"></textarea>
+        </div>
+        <div class="form-group" style="display: none;">
+          <label class="form-label" for="selectedPlan">선택한 요금제</label>
+          <input type="text" id="selectedPlan" class="form-control" readonly>
+        </div>
+        
+        <!-- Loading State Indicator -->
+        <div id="form-loading" class="form-loading" style="display: none; align-items: center; justify-content: center; gap: 12px; margin: 24px 0; color: var(--accent-purple-hover); font-weight: 600;">
+          <div class="spinner" style="width: 24px; height: 24px; border: 3px solid rgba(139, 92, 246, 0.1); border-top: 3px solid var(--accent-purple); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <span>AI 콘텐츠를 생성하는 중입니다... (최대 3분 소요)</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">AI 무료 콘텐츠 생성하기</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Dynamic Content Result Section -->
+  <section id="result-section" class="container section-padding fade-in-section" style="display: none;">
+    <div class="section-header">
+      <h2>✨ AI 생성 마케팅 콘텐츠</h2>
+      <p>귀하의 비즈니스 목표에 완벽히 정렬된 본문 텍스트와 보라색 톤앤매너 테마의 고화질 이미지입니다.</p>
+    </div>
+    <div class="result-wrapper" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 32px; padding: 48px; backdrop-filter: blur(16px); box-shadow: 0 30px 60px rgba(4, 5, 7, 0.4);">
+      <div class="result-card" style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: start;">
+        
+        <!-- Left: AI Generated Images Grid -->
+        <div class="result-images-wrapper" style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+          <div id="result-images-grid" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+            <!-- Cards populated dynamically by app.js -->
+          </div>
+        </div>
+
+        <!-- Right: Text Content & Action -->
+        <div class="result-text-box" style="display: flex; flex-direction: column; gap: 24px; min-height: 100%;">
+          <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 16px;">
+            <h3 id="result-title" style="font-size: 24px; font-weight: 800; color: var(--text-white); line-height: 1.4; border-left: 4px solid var(--accent-purple); padding-left: 14px;">생성된 제목이 표시됩니다.</h3>
+            <div id="result-content-body" style="font-size: 15.5px; color: var(--text-gray-300); line-height: 1.8; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); padding: 24px; border-radius: 16px; max-height: 360px; overflow-y: auto; white-space: pre-wrap;">생성된 본문 글이 표시됩니다.</div>
+          </div>
+          <button id="copy-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            본문 텍스트 클립보드 복사
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Payment Modal Popup -->
+  <div id="payment-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(4, 5, 7, 0.85); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="modal-box" style="background: #11131c; border: 1px solid var(--border-color); width: 100%; max-width: 520px; border-radius: 28px; padding: 40px; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(139, 92, 246, 0.15);">
+      <button id="close-modal-btn" class="close-btn" style="position: absolute; top: 24px; right: 24px; background: none; border: none; font-size: 28px; color: var(--text-gray-500); cursor: pointer; transition: var(--transition-fast); line-height: 1;">&times;</button>
+      
+      <div style="display: flex; flex-direction: column; gap: 20px; text-align: center;">
+        <div style="width: 64px; height: 64px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 28px; margin: 0 auto;">
+          ⚠️
+        </div>
+        <h3 style="font-size: 24px; font-weight: 800; color: var(--text-white); letter-spacing: -0.5px;">무료 생성 한도 초과</h3>
+        <p style="font-size: 15px; color: var(--text-gray-400); line-height: 1.6;">
+          입력하신 이메일 주소의 무료 체험 한도가 모두 소진되었습니다.<br>
+          (무료 한도 - 블로그: 최대 2회 / 스레드: 최대 5회)
+        </p>
+        <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.15); border-radius: 16px; padding: 18px; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 14px; color: var(--text-gray-300); display: flex; justify-content: space-between;">
+            <span>블로그 무료 생성 횟수</span>
+            <span style="font-weight: 700; color: var(--accent-purple-hover);">2 / 2회 완료</span>
+          </div>
+          <div style="font-size: 14px; color: var(--text-gray-300); display: flex; justify-content: space-between;">
+            <span>스레드 무료 생성 횟수</span>
+            <span style="font-weight: 700; color: var(--accent-purple-hover);">5 / 5회 완료</span>
+          </div>
+        </div>
+        <p style="font-size: 14px; color: var(--text-gray-500); line-height: 1.5;">
+          지속적인 콘텐츠 자동화 발행 및 무제한 맞춤 비주얼 매칭을 활용하시려면 요금제 플랜을 시작하세요.
+        </p>
+        <a href="#pricing" class="btn btn-primary" id="go-to-pricing-btn" style="margin-top: 10px;">요금제 보러가기</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <a href="#" class="footer-logo">AI 콘텐츠 자동화</a>
+      <div class="copyright">© 2026 AI 콘텐츠 자동화. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#" class="footer-link">이용약관</a>
+        <a href="#" class="footer-link">개인정보처리방침</a>
+        <a href="#" class="footer-link">고객센터</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Message -->
+  <div id="toast" class="toast-notification">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span>무료 체험 신청이 완료되었습니다!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

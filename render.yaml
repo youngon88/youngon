@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-content-generator
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: GEMINI_API_KEY
+        sync: false # Requires manual setup in Render dashboard for security
