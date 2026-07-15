@@ -70,7 +70,7 @@ function callOpenAIREST(apiKey, prompt) {
     model: 'gpt-5.5',
     messages: [{ role: 'user', content: prompt }],
     response_format: { type: 'json_object' },
-    reasoning_effort: 'minimal'
+    reasoning_effort: 'low'
   };
 
   console.log('[OpenAI] Sending request to api.openai.com/v1/chat/completions ...');
