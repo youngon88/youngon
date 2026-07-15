@@ -1,5 +1,9 @@
 const https = require('https');
-const { getStore } = require('@netlify/blobs');
+// NOTE: Netlify Blobs (@netlify/blobs) kept throwing MissingBlobsEnvironmentError
+// even when called inside the handler with esbuild bundling. Temporarily switched
+// to an in-memory store so content generation works end-to-end; counts will reset
+// whenever the function cold-starts (new deploy, or after idle). Revisit Blobs later.
+const inMemoryUsers = {};
 
 // ---------- Strategy Mapper ----------
 const strategyMap = {
@@ -115,40 +119,21 @@ function getMockContent(type, job, goal, strategy, isFinalFallback = false) {
   }
 }
 
-// ---------- Limit tracking via Netlify Blobs (persistent, replaces Vercel KV) ----------
-// NOTE: getStore() must be called INSIDE the handler at invoke time, not at module
-// load time, otherwise Netlify hasn't injected the Blobs context yet and it throws
-// MissingBlobsEnvironmentError.
-function getLimitsStore() {
-  return getStore('user-limits');
-}
-
+// ---------- Limit tracking (temporary in-memory, Blobs bypassed for now) ----------
 async function handleLimitCheck(email) {
   const defaultVal = { blog_count: 0, thread_count: 0 };
-  try {
-    const store = getLimitsStore();
-    const data = await store.get(`user:${email}`, { type: 'json' });
-    if (!data) return defaultVal;
-    return {
-      blog_count: parseInt(data.blog_count || 0, 10),
-      thread_count: parseInt(data.thread_count || 0, 10)
-    };
-  } catch (e) {
-    console.error('Netlify Blobs fetch error:', e.message);
-    return defaultVal;
+  if (!inMemoryUsers[email]) {
+    inMemoryUsers[email] = { ...defaultVal };
   }
+  return inMemoryUsers[email];
 }
 
-async function handleLimitIncrement(email, contentType, currentCounts) {
+async function handleLimitIncrement(email, contentType) {
   const column = contentType === 'blog' ? 'blog_count' : 'thread_count';
-  const nextVal = (currentCounts[column] || 0) + 1;
-  const updated = { ...currentCounts, [column]: nextVal };
-  try {
-    const store = getLimitsStore();
-    await store.setJSON(`user:${email}`, updated);
-  } catch (e) {
-    console.error('Netlify Blobs increment error:', e.message);
+  if (!inMemoryUsers[email]) {
+    inMemoryUsers[email] = { blog_count: 0, thread_count: 0 };
   }
+  inMemoryUsers[email][column]++;
 }
 
 // ---------- Prompt builders (identical text to original server.js) ----------
