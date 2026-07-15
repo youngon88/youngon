@@ -59,9 +59,12 @@ function callGeminiREST(modelName, apiKey, payload) {
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-// ---------- Retry wrapper (Netlify functions have a 10-26s timeout depending on plan, so keep it short) ----------
-async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 4) {
-  const retryIntervals = [1000, 1500, 2000, 2000];
+// ---------- Retry wrapper ----------
+// Netlify's function execution time limit varies by plan (roughly 10-26s on most
+// plans). We push retries as close to that ceiling as safely possible so a
+// temporarily overloaded Gemini model has more chances to recover mid-request.
+async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 6) {
+  const retryIntervals = [1500, 2000, 3000, 4000, 4000, 4000];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -69,7 +72,7 @@ async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 4) {
     } catch (err) {
       const is503 = err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('high demand');
       if (is503 && attempt < maxRetries) {
-        const nextDelay = retryIntervals[attempt] || 2000;
+        const nextDelay = retryIntervals[attempt] || 4000;
         console.warn(`[Retry] ${modelName} 503. attempt ${attempt + 1}/${maxRetries}, waiting ${nextDelay}ms`);
         await wait(nextDelay);
       } else {
@@ -309,7 +312,7 @@ exports.handler = async (event) => {
     let textSuccess = true;
 
     try {
-      textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 4);
+      textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 6);
     } catch (textApiErr) {
       console.error('[Critical] text generation retries exhausted:', textApiErr.message);
       textSuccess = false;
@@ -340,7 +343,7 @@ exports.handler = async (event) => {
             contents: [{ parts: [{ text: promptText }] }],
             generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
           };
-          const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 4);
+          const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 3);
           const part = imgResult.candidates?.[0]?.content?.parts?.[0];
           if (part && part.inlineData) {
             images.push({ url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText });
