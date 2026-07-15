@@ -1,9 +1,16 @@
 const https = require('https');
-// NOTE: Netlify Blobs (@netlify/blobs) kept throwing MissingBlobsEnvironmentError
-// even when called inside the handler with esbuild bundling. Temporarily switched
-// to an in-memory store so content generation works end-to-end; counts will reset
-// whenever the function cold-starts (new deploy, or after idle). Revisit Blobs later.
-const inMemoryUsers = {};
+const { getStore } = require('@netlify/blobs');
+// Netlify's automatic Blobs context injection has a known, ongoing platform bug
+// (MissingBlobsEnvironmentError even when getStore() is called inside the handler).
+// To avoid depending on that automatic detection, we pass the site ID and a
+// Personal Access Token explicitly via env vars set in the Netlify dashboard.
+function getLimitsStore() {
+  return getStore({
+    name: 'user-limits',
+    siteID: process.env.BLOBS_SITE_ID,
+    token: process.env.BLOBS_TOKEN
+  });
+}
 
 // ---------- Strategy Mapper ----------
 const strategyMap = {
@@ -60,11 +67,13 @@ function callGeminiREST(modelName, apiKey, payload) {
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // ---------- Retry wrapper ----------
-// Netlify's function execution time limit varies by plan (roughly 10-26s on most
-// plans). We push retries as close to that ceiling as safely possible so a
-// temporarily overloaded Gemini model has more chances to recover mid-request.
-async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 6) {
-  const retryIntervals = [1500, 2000, 3000, 4000, 4000, 4000];
+// Important: Netlify was killing the whole function at a hard 30s ceiling before
+// our own retry loop finished, which meant the graceful "show mock content"
+// fallback never got a chance to run and the user just saw a dead connection.
+// So instead of retrying longer, we now retry FEWER times with SHORTER waits so
+// our own code finishes (and falls back gracefully) well before Netlify's cutoff.
+async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 2) {
+  const retryIntervals = [1000, 1500];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -72,7 +81,7 @@ async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 6) {
     } catch (err) {
       const is503 = err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('high demand');
       if (is503 && attempt < maxRetries) {
-        const nextDelay = retryIntervals[attempt] || 4000;
+        const nextDelay = retryIntervals[attempt] || 1500;
         console.warn(`[Retry] ${modelName} 503. attempt ${attempt + 1}/${maxRetries}, waiting ${nextDelay}ms`);
         await wait(nextDelay);
       } else {
@@ -122,21 +131,33 @@ function getMockContent(type, job, goal, strategy, isFinalFallback = false) {
   }
 }
 
-// ---------- Limit tracking (temporary in-memory, Blobs bypassed for now) ----------
+// ---------- Limit tracking via Netlify Blobs (persistent, manual auth) ----------
 async function handleLimitCheck(email) {
   const defaultVal = { blog_count: 0, thread_count: 0 };
-  if (!inMemoryUsers[email]) {
-    inMemoryUsers[email] = { ...defaultVal };
+  try {
+    const store = getLimitsStore();
+    const data = await store.get(`user:${email}`, { type: 'json' });
+    if (!data) return defaultVal;
+    return {
+      blog_count: parseInt(data.blog_count || 0, 10),
+      thread_count: parseInt(data.thread_count || 0, 10)
+    };
+  } catch (e) {
+    console.error('Netlify Blobs fetch error:', e.message);
+    return defaultVal;
   }
-  return inMemoryUsers[email];
 }
 
-async function handleLimitIncrement(email, contentType) {
+async function handleLimitIncrement(email, contentType, currentCounts) {
   const column = contentType === 'blog' ? 'blog_count' : 'thread_count';
-  if (!inMemoryUsers[email]) {
-    inMemoryUsers[email] = { blog_count: 0, thread_count: 0 };
+  const nextVal = (currentCounts[column] || 0) + 1;
+  const updated = { ...currentCounts, [column]: nextVal };
+  try {
+    const store = getLimitsStore();
+    await store.setJSON(`user:${email}`, updated);
+  } catch (e) {
+    console.error('Netlify Blobs increment error:', e.message);
   }
-  inMemoryUsers[email][column]++;
 }
 
 // ---------- Prompt builders (identical text to original server.js) ----------
@@ -312,7 +333,7 @@ exports.handler = async (event) => {
     let textSuccess = true;
 
     try {
-      textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 6);
+      textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 2);
     } catch (textApiErr) {
       console.error('[Critical] text generation retries exhausted:', textApiErr.message);
       textSuccess = false;
@@ -343,7 +364,7 @@ exports.handler = async (event) => {
             contents: [{ parts: [{ text: promptText }] }],
             generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
           };
-          const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 3);
+          const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 1);
           const part = imgResult.candidates?.[0]?.content?.parts?.[0];
           if (part && part.inlineData) {
             images.push({ url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText });
