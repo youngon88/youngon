@@ -314,110 +314,73 @@ exports.handler = async (event) => {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  let warningMessage = '';
-  let generatedResult = null;
-
   if (!apiKey || apiKey.trim() === '') {
-    generatedResult = getMockContent(contentType, userJob, contentGoal, selectedStrategy, false);
-    return finalizeResponse(generatedResult, counts, apiKey, warningMessage);
+    // NOTE: no mock fallback anymore, per decision. If the key is missing this
+    // just fails loudly instead of silently showing placeholder content.
+    throw new Error('GEMINI_API_KEY is not configured.');
   }
 
-  try {
-    const prompt = contentType === 'blog'
-      ? buildBlogPrompt(userJob, contentGoal, contentLink, contentRequest)
-      : buildThreadPrompt(userJob, contentGoal, contentLink, contentRequest);
+  // NOTE: Mock-content fallback has been intentionally removed. If Gemini is
+  // overloaded (503) or returns something we can't parse, this throws and the
+  // whole function invocation fails, which Netlify surfaces to the frontend as
+  // a hard connection failure ("서버와 통신이 실패했습니다") rather than quietly
+  // substituting example content.
+  const prompt = contentType === 'blog'
+    ? buildBlogPrompt(userJob, contentGoal, contentLink, contentRequest)
+    : buildThreadPrompt(userJob, contentGoal, contentLink, contentRequest);
 
-    const textPayload = { contents: [{ parts: [{ text: prompt }] }] };
+  const textPayload = { contents: [{ parts: [{ text: prompt }] }] };
+  const textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 2);
 
-    let textResult = null;
-    let textSuccess = true;
+  const responseText = textResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  let cleanJsonText = responseText.trim();
+  if (cleanJsonText.startsWith('```')) {
+    cleanJsonText = cleanJsonText.replace(/^```json/, '').replace(/```$/, '').trim();
+  }
+  const parsed = JSON.parse(cleanJsonText); // throws if Gemini didn't return valid JSON
 
-    try {
-      textResult = await callRESTWithRetry('gemini-3.5-flash', apiKey, textPayload, 2);
-    } catch (textApiErr) {
-      console.error('[Critical] text generation retries exhausted:', textApiErr.message);
-      textSuccess = false;
-      warningMessage = '지금 AI 서버 사용량이 많아 생성이 지연되고 있어요. 잠시 후 다시 시도해주세요. 대신 예시 콘텐츠를 보여드립니다.';
-    }
-
-    let parsed = null;
-    if (textSuccess && textResult) {
-      const responseText = textResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      let cleanJsonText = responseText.trim();
-      if (cleanJsonText.startsWith('```')) {
-        cleanJsonText = cleanJsonText.replace(/^```json/, '').replace(/```$/, '').trim();
-      }
-      try {
-        parsed = JSON.parse(cleanJsonText);
-      } catch (jsonErr) {
-        console.error('[Error] JSON parse failed, using fallback.');
-        textSuccess = false;
-      }
-    }
-
-    let images = [];
-    if (textSuccess && parsed && contentType === 'blog') {
-      const prompts = [parsed.image_prompt_1, parsed.image_prompt_2, parsed.image_prompt_3, parsed.image_prompt_4].filter(Boolean);
-      for (const promptText of prompts) {
-        try {
-          const imagePayload = {
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
-          };
-          const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 1);
-          const part = imgResult.candidates?.[0]?.content?.parts?.[0];
-          if (part && part.inlineData) {
-            images.push({ url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText });
-          } else {
-            throw new Error('No inlineData returned from Gemini image REST API.');
-          }
-        } catch (imageErr) {
-          console.error('[Critical] image generation failed:', imageErr.message);
-          images.push({ url: 'error', error: '이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.', prompt: promptText });
-        }
+  let images = [];
+  if (contentType === 'blog') {
+    const prompts = [parsed.image_prompt_1, parsed.image_prompt_2, parsed.image_prompt_3, parsed.image_prompt_4].filter(Boolean);
+    for (const promptText of prompts) {
+      const imagePayload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
+      };
+      const imgResult = await callRESTWithRetry('gemini-3.1-flash-image', apiKey, imagePayload, 1);
+      const part = imgResult.candidates?.[0]?.content?.parts?.[0];
+      if (part && part.inlineData) {
+        images.push({ url: `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`, prompt: promptText });
+      } else {
+        throw new Error('No inlineData returned from Gemini image REST API.');
       }
     }
-
-    if (!textSuccess || !parsed) {
-      generatedResult = getMockContent(contentType, userJob, contentGoal, selectedStrategy, true);
-    } else {
-      const bodyContent = parsed.body || parsed.content || '';
-      generatedResult = { ...parsed, body: bodyContent, content: bodyContent, images };
-    }
-  } catch (err) {
-    console.error('[Critical] execution breakdown:', err.message);
-    warningMessage = '생성 도중 오류가 발생했습니다. 아래 예시 콘텐츠를 보여드립니다.';
-    generatedResult = getMockContent(contentType, userJob, contentGoal, selectedStrategy, true);
   }
 
-  return finalizeResponse(generatedResult, counts, apiKey, warningMessage);
+  const bodyContent = parsed.body || parsed.content || '';
+  const generatedResult = { ...parsed, body: bodyContent, content: bodyContent, images };
 
-  async function finalizeResponse(resultObj, currentCounts, key, warning) {
-    try {
-      await handleLimitIncrement(userEmail, contentType, currentCounts);
-    } catch (incErr) {
-      console.error('[Error] limit increment failed:', incErr.message);
-    }
-    const nextCount = (currentCounts[contentType === 'blog' ? 'blog_count' : 'thread_count'] || 0) + 1;
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: JSON.stringify({
-        success: true,
-        isMock: !key || warning !== '',
-        warning_message: warning,
-        title: resultObj.title,
-        content: resultObj.content || resultObj.body,
-        body: resultObj.body,
-        strategy_summary: resultObj.strategy_summary,
-        main_keyword: resultObj.main_keyword,
-        sub_keywords: resultObj.sub_keywords,
-        selected_topic: resultObj.selected_topic,
-        hashtags: resultObj.hashtags,
-        images: resultObj.images,
-        limit: limits[contentType],
-        current: nextCount
-      })
-    };
-  }
+  await handleLimitIncrement(userEmail, contentType, counts);
+  const nextCount = (counts[contentType === 'blog' ? 'blog_count' : 'thread_count'] || 0) + 1;
+
+  return {
+    statusCode: 200,
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      success: true,
+      isMock: false,
+      warning_message: '',
+      title: generatedResult.title,
+      content: generatedResult.content,
+      body: generatedResult.body,
+      strategy_summary: generatedResult.strategy_summary,
+      main_keyword: generatedResult.main_keyword,
+      sub_keywords: generatedResult.sub_keywords,
+      selected_topic: generatedResult.selected_topic,
+      hashtags: generatedResult.hashtags,
+      images: generatedResult.images,
+      limit: limits[contentType],
+      current: nextCount
+    })
+  };
 };
