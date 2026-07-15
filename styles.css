@@ -786,7 +786,7 @@ footer {
 }
 
 /* ===================== Mobile Responsive ===================== */
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .container {
     padding: 0 20px;
   }
