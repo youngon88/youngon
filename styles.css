@@ -872,6 +872,17 @@ footer {
   .card {
     padding: 26px 22px;
     border-radius: 18px;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .pricing-card {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .pricing-features {
+    flex-grow: 0 !important;
   }
 
   .problem-card .icon-box {
