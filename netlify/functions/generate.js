@@ -372,7 +372,10 @@ exports.handler = async (event) => {
     const imageResults = await Promise.allSettled(prompts.map((promptText) => {
       const imagePayload = {
         contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
+        // 2K images pushed 4 base64-encoded images past Netlify's 6MB synchronous
+        // function response cap (Function.ResponseSizeTooLarge). 1K keeps the
+        // combined payload comfortably under that limit.
+        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '1K' } }
       };
       // Image generation legitimately takes ~10s (measured), so give it more
       // headroom than the default 10s timeout instead of racing it.
