@@ -94,12 +94,12 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 // fallback never got a chance to run and the user just saw a dead connection.
 // So instead of retrying longer, we now retry FEWER times with SHORTER waits so
 // our own code finishes (and falls back gracefully) well before Netlify's cutoff.
-async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 1) {
+async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 1, timeoutMs = 10000) {
   const retryIntervals = [500, 500];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await callGeminiREST(modelName, apiKey, payload);
+      return await callGeminiREST(modelName, apiKey, payload, timeoutMs);
     } catch (err) {
       const isRetryable = err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('high demand') || err.message.includes('timed out');
       if (isRetryable && attempt < maxRetries) {
@@ -374,7 +374,9 @@ exports.handler = async (event) => {
         contents: [{ parts: [{ text: promptText }] }],
         generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
       };
-      return callRESTWithRetry('gemini-3.1-flash-image', geminiKey, imagePayload, 1);
+      // Image generation legitimately takes ~10s (measured), so give it more
+      // headroom than the default 10s timeout instead of racing it.
+      return callRESTWithRetry('gemini-3.1-flash-image', geminiKey, imagePayload, 1, 20000);
     }));
 
     images = imageResults.map((result, i) => {
