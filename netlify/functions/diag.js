@@ -134,13 +134,13 @@ exports.handler = async () => {
   const apiKey = process.env.GEMINI_API_KEY;
   const keyInfo = apiKey ? { present: true, length: apiKey.length, hasSurroundingWhitespace: apiKey.trim().length !== apiKey.length, startsWith: apiKey.slice(0, 6), endsWith: apiKey.slice(-4) } : { present: false };
 
-  const [httpsResult, fetchResult] = apiKey
-    ? await Promise.all([timeGeminiCall('gemini-3.5-flash', apiKey), timeGeminiCallViaFetch('gemini-3.5-flash', apiKey)])
+  const [flashResult, flashLiteResult] = apiKey
+    ? await Promise.all([timeGeminiCall('gemini-3.5-flash', apiKey), timeGeminiCall('gemini-3.1-flash-lite', apiKey)])
     : [{ skipped: 'no GEMINI_API_KEY in env' }, { skipped: 'no GEMINI_API_KEY in env' }];
 
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({ dns: dnsResults, http: httpResults, geminiKeyInfo: keyInfo, geminiViaHttpsModule: httpsResult, geminiViaFetch: fetchResult }, null, 2)
+    body: JSON.stringify({ dns: dnsResults, http: httpResults, geminiKeyInfo: keyInfo, geminiFlash: flashResult, geminiFlashLite: flashLiteResult }, null, 2)
   };
 };
