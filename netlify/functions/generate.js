@@ -29,7 +29,12 @@ const mockStockImages = [
 ];
 
 // ---------- Gemini REST call (native https, same as before) ----------
-function callGeminiREST(modelName, apiKey, payload) {
+// Uses a manual wall-clock timer (not the socket-level `timeout` option) because
+// Node's http.request `timeout` only starts counting once a socket exists - if
+// the hang happens during DNS resolution or connect (the IPv6-blackhole failure
+// mode we saw on this platform before), that option never fires. req.destroy()
+// here forcibly kills the request regardless of which phase it's stuck in.
+function callGeminiREST(modelName, apiKey, payload, timeoutMs = 10000) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   return new Promise((resolve, reject) => {
@@ -39,14 +44,24 @@ function callGeminiREST(modelName, apiKey, payload) {
       path: url.pathname + url.search,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      family: 4, // force IPv4 - Netlify's serverless environment can hang indefinitely on IPv6 routes (same issue previously hit with OpenAI)
-      timeout: 15000
+      family: 4 // force IPv4 - Netlify's serverless environment can hang indefinitely on IPv6 routes
     };
+
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      req.destroy();
+      reject(new Error(`Gemini request to ${modelName} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
 
     const req = https.request(options, (res) => {
       const chunks = [];
       res.on('data', (chunk) => chunks.push(chunk));
       res.on('end', () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
         const data = Buffer.concat(chunks).toString('utf-8');
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
@@ -60,10 +75,12 @@ function callGeminiREST(modelName, apiKey, payload) {
       });
     });
 
-    req.on('timeout', () => {
-      req.destroy(new Error(`Gemini request to ${modelName} timed out after 15s`));
+    req.on('error', (e) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(e);
     });
-    req.on('error', (e) => reject(e));
     req.write(JSON.stringify(payload));
     req.end();
   });
@@ -72,13 +89,13 @@ function callGeminiREST(modelName, apiKey, payload) {
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // ---------- Retry wrapper ----------
-// Important: Netlify was killing the whole function at a hard 30s ceiling before
+// Important: Netlify was killing the whole function at a hard ~30s ceiling before
 // our own retry loop finished, which meant the graceful "show mock content"
 // fallback never got a chance to run and the user just saw a dead connection.
 // So instead of retrying longer, we now retry FEWER times with SHORTER waits so
 // our own code finishes (and falls back gracefully) well before Netlify's cutoff.
-async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 2) {
-  const retryIntervals = [1000, 1500];
+async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 1) {
+  const retryIntervals = [500, 500];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -86,8 +103,8 @@ async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 2) {
     } catch (err) {
       const isRetryable = err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('high demand') || err.message.includes('timed out');
       if (isRetryable && attempt < maxRetries) {
-        const nextDelay = retryIntervals[attempt] || 1500;
-        console.warn(`[Retry] ${modelName} 503. attempt ${attempt + 1}/${maxRetries}, waiting ${nextDelay}ms`);
+        const nextDelay = retryIntervals[attempt] || 500;
+        console.warn(`[Retry] ${modelName} failed (${err.message}). attempt ${attempt + 1}/${maxRetries}, waiting ${nextDelay}ms`);
         await wait(nextDelay);
       } else {
         throw err;
@@ -337,7 +354,7 @@ exports.handler = async (event) => {
 
   // Text generation reverted back to Gemini (GPT experiment rolled back).
   const textPayload = { contents: [{ parts: [{ text: prompt }] }] };
-  const textResult = await callRESTWithRetry('gemini-3.5-flash', geminiKey, textPayload, 2);
+  const textResult = await callRESTWithRetry('gemini-3.5-flash', geminiKey, textPayload, 1);
   const responseText = textResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
   let cleanJsonText = responseText.trim();
   if (cleanJsonText.startsWith('```')) {
