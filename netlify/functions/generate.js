@@ -352,9 +352,11 @@ exports.handler = async (event) => {
     ? buildBlogPrompt(userJob, contentGoal, contentLink, contentRequest)
     : buildThreadPrompt(userJob, contentGoal, contentLink, contentRequest);
 
-  // Text generation reverted back to Gemini (GPT experiment rolled back).
+  // gemini-3.5-flash was measured at 13-20s+ for even a one-word reply (model-side
+  // congestion), which blows past Netlify's execution window. gemini-3.1-flash-lite
+  // is built for low-latency traffic and responded in under 500ms in the same test.
   const textPayload = { contents: [{ parts: [{ text: prompt }] }] };
-  const textResult = await callRESTWithRetry('gemini-3.5-flash', geminiKey, textPayload, 1);
+  const textResult = await callRESTWithRetry('gemini-3.1-flash-lite', geminiKey, textPayload, 2);
   const responseText = textResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
   let cleanJsonText = responseText.trim();
   if (cleanJsonText.startsWith('```')) {
