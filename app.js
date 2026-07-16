@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultTitle = document.getElementById('result-title');
   const resultContentBody = document.getElementById('result-content-body');
   const copyBtn = document.getElementById('copy-btn');
+  let lastContentType = null;
 
   // Pricing selection logic
   pricingButtons.forEach(button => {
@@ -101,7 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Copy text to clipboard logic
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
-      const textToCopy = `${resultTitle.innerText}\n\n${resultContentBody.innerText}`;
+      const textToCopy = lastContentType === 'thread'
+        ? resultContentBody.innerText
+        : `${resultTitle.innerText}\n\n${resultContentBody.innerText}`;
       
       navigator.clipboard.writeText(textToCopy).then(() => {
         const originalText = copyBtn.innerHTML;
@@ -171,8 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // Fill text results
-          resultTitle.innerText = data.title;
-          
+          lastContentType = contentType;
+          if (contentType === 'thread') {
+            // Threads posts have no title in the UI - body only.
+            resultTitle.style.display = 'none';
+          } else {
+            resultTitle.style.display = '';
+            resultTitle.innerText = data.title;
+          }
+
           let bodyText = data.content;
           if (data.hashtags) {
             bodyText += `\n\n${data.hashtags}`;
