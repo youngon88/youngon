@@ -516,6 +516,27 @@ header {
   color: var(--accent-purple-hover);
 }
 
+.discount-badge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.price-original {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-gray-500);
+  text-decoration: line-through;
+  margin-bottom: 2px;
+}
+
 .pricing-price {
   font-size: 46px;
   font-weight: 800;
@@ -919,6 +940,16 @@ footer {
 
   .pricing-price span {
     font-size: 12px;
+  }
+
+  .price-original {
+    font-size: 12px;
+  }
+
+  .discount-badge {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    margin-bottom: 6px;
   }
 
   .pricing-header {
