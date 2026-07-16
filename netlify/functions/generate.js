@@ -38,7 +38,9 @@ function callGeminiREST(modelName, apiKey, payload) {
       hostname: url.hostname,
       path: url.pathname + url.search,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      family: 4, // force IPv4 - Netlify's serverless environment can hang indefinitely on IPv6 routes (same issue previously hit with OpenAI)
+      timeout: 15000
     };
 
     const req = https.request(options, (res) => {
@@ -58,6 +60,9 @@ function callGeminiREST(modelName, apiKey, payload) {
       });
     });
 
+    req.on('timeout', () => {
+      req.destroy(new Error(`Gemini request to ${modelName} timed out after 15s`));
+    });
     req.on('error', (e) => reject(e));
     req.write(JSON.stringify(payload));
     req.end();
@@ -79,8 +84,8 @@ async function callRESTWithRetry(modelName, apiKey, payload, maxRetries = 2) {
     try {
       return await callGeminiREST(modelName, apiKey, payload);
     } catch (err) {
-      const is503 = err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('high demand');
-      if (is503 && attempt < maxRetries) {
+      const isRetryable = err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('high demand') || err.message.includes('timed out');
+      if (isRetryable && attempt < maxRetries) {
         const nextDelay = retryIntervals[attempt] || 1500;
         console.warn(`[Retry] ${modelName} 503. attempt ${attempt + 1}/${maxRetries}, waiting ${nextDelay}ms`);
         await wait(nextDelay);
