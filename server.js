@@ -230,7 +230,7 @@ app.post('/api/generate', async (req, res) => {
   }
 
   const selectedStrategy = strategyMap[contentGoal] || '스토리형 전략';
-  const limits = { blog: 2, thread: 5 };
+  const limits = { blog: 1, thread: 2 };
 
   try {
     // 1. Fetch current limits count

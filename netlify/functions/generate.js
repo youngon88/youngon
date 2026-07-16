@@ -315,7 +315,7 @@ exports.handler = async (event) => {
   }
 
   const selectedStrategy = strategyMap[contentGoal] || '스토리형 전략';
-  const limits = { blog: 2, thread: 5 };
+  const limits = { blog: 1, thread: 2 };
 
   const counts = await handleLimitCheck(userEmail);
   const currentCount = contentType === 'blog' ? counts.blog_count : counts.thread_count;
