@@ -100,6 +100,26 @@ function timeGeminiCall(modelName, apiKey, timeoutMs = 20000) {
   });
 }
 
+async function timeGeminiCallViaFetch(modelName, apiKey, timeoutMs = 20000) {
+  const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: 'Say hi in one word.' }] }] }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    const text = await res.text();
+    return { modelName, ok: res.ok, ms: Date.now() - started, statusCode: res.status, bodySample: text.slice(0, 300) };
+  } catch (e) {
+    clearTimeout(timer);
+    return { modelName, ok: false, ms: Date.now() - started, error: e.name === 'AbortError' ? `timed out after ${timeoutMs}ms` : e.message };
+  }
+}
+
 exports.handler = async () => {
   const targets = [
     { hostname: 'api.github.com', path: '/' },
@@ -112,12 +132,15 @@ exports.handler = async () => {
   const httpResults = await Promise.all(targets.map((t) => timeHttpsGet(t.hostname, t.path)));
 
   const apiKey = process.env.GEMINI_API_KEY;
-  const keyInfo = { present: !!apiKey, length: apiKey ? apiKey.length : 0 };
-  const geminiCallResult = apiKey ? await timeGeminiCall('gemini-3.5-flash', apiKey) : { skipped: 'no GEMINI_API_KEY in env' };
+  const keyInfo = apiKey ? { present: true, length: apiKey.length, hasSurroundingWhitespace: apiKey.trim().length !== apiKey.length, startsWith: apiKey.slice(0, 6), endsWith: apiKey.slice(-4) } : { present: false };
+
+  const [httpsResult, fetchResult] = apiKey
+    ? await Promise.all([timeGeminiCall('gemini-3.5-flash', apiKey), timeGeminiCallViaFetch('gemini-3.5-flash', apiKey)])
+    : [{ skipped: 'no GEMINI_API_KEY in env' }, { skipped: 'no GEMINI_API_KEY in env' }];
 
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({ dns: dnsResults, http: httpResults, geminiKeyInfo: keyInfo, geminiMinimalCall: geminiCallResult }, null, 2)
+    body: JSON.stringify({ dns: dnsResults, http: httpResults, geminiKeyInfo: keyInfo, geminiViaHttpsModule: httpsResult, geminiViaFetch: fetchResult }, null, 2)
   };
 };
