@@ -57,9 +57,8 @@ function timeHttpsGet(hostname, path, timeoutMs = 8000) {
   });
 }
 
-function timeGeminiCall(modelName, apiKey, timeoutMs = 20000) {
+function timeGeminiCall(modelName, apiKey, timeoutMs = 20000, payload = { contents: [{ parts: [{ text: 'Say hi in one word.' }] }] }) {
   const started = Date.now();
-  const payload = { contents: [{ parts: [{ text: 'Say hi in one word.' }] }] };
   return new Promise((resolve) => {
     let settled = false;
     const options = {
@@ -121,26 +120,24 @@ async function timeGeminiCallViaFetch(modelName, apiKey, timeoutMs = 20000) {
 }
 
 exports.handler = async () => {
-  const targets = [
-    { hostname: 'api.github.com', path: '/' },
-    { hostname: 'generativelanguage.googleapis.com', path: '/' },
-    { hostname: 'api.openai.com', path: '/' },
-    { hostname: 'www.google.com', path: '/' }
-  ];
-
-  const dnsResults = await Promise.all(targets.map((t) => timeDnsLookup(t.hostname)));
-  const httpResults = await Promise.all(targets.map((t) => timeHttpsGet(t.hostname, t.path)));
-
   const apiKey = process.env.GEMINI_API_KEY;
-  const keyInfo = apiKey ? { present: true, length: apiKey.length, hasSurroundingWhitespace: apiKey.trim().length !== apiKey.length, startsWith: apiKey.slice(0, 6), endsWith: apiKey.slice(-4) } : { present: false };
+  const keyInfo = apiKey ? { present: true, length: apiKey.length } : { present: false };
 
-  const [flashResult, flashLiteResult] = apiKey
-    ? await Promise.all([timeGeminiCall('gemini-3.5-flash', apiKey), timeGeminiCall('gemini-3.1-flash-lite', apiKey)])
+  const imagePayload = {
+    contents: [{ parts: [{ text: 'A red apple on a white background, photorealistic, 1:1 ratio, no text.' }] }],
+    generationConfig: { responseModalities: ['IMAGE'], imageConfig: { imageSize: '2K' } }
+  };
+
+  const [flashLiteResult, imageResult] = apiKey
+    ? await Promise.all([
+        timeGeminiCall('gemini-3.1-flash-lite', apiKey, 15000),
+        timeGeminiCall('gemini-3.1-flash-image', apiKey, 25000, imagePayload)
+      ])
     : [{ skipped: 'no GEMINI_API_KEY in env' }, { skipped: 'no GEMINI_API_KEY in env' }];
 
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({ dns: dnsResults, http: httpResults, geminiKeyInfo: keyInfo, geminiFlash: flashResult, geminiFlashLite: flashLiteResult }, null, 2)
+    body: JSON.stringify({ geminiKeyInfo: keyInfo, geminiFlashLite: flashLiteResult, geminiFlashImage: imageResult }, null, 2)
   };
 };
